@@ -1,0 +1,24 @@
+{
+  "name": "remindersapi",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "Madalina"
+  ],
+  "license": "ISC",
+  "author": "Madalina",
+  "main": "index.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Madalina294/RemindersApp.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node --watch --env-file=.env src/index.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
+  }
+}
