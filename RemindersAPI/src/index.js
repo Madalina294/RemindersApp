@@ -1,13 +1,15 @@
-import express from "express";
-import remindersRoutes from "./routes/remindersRoutes.js";
+import express from "express"; // Imports Express.js.
+import reminderRoutes from "./routes/remindersRoutes.js";
+import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware.js";
 
-const app = express();
+const app = express(); // Creates an Express application instance.
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use("/reminders", reminderRoutes);
 
-app.use("/reminders", remindersRoutes);
+app.use(errorHandlerMiddleware);
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}!`);
-});
+  console.log(`Example app listening on port ${port}`);
+}); // Starts the server on port 3000 and logs a confirmation message.

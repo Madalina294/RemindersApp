@@ -1,62 +1,83 @@
+import ERROR_MESSAGES from "../constants/errorMessages.js";
 import { ReminderModel } from "../models/reminderModel.js";
+import CustomError from "../utils/CustomError.js";
 
 export const ReminderService = {
   async getAllReminders() {
     return ReminderModel.getAll();
   },
-  async getReminderById(id) {
-    const reminder = await ReminderModel.findById(id);
+
+  async getReminderById(reminderId) {
+    // Fetch reminder by id
+    const reminder = await ReminderModel.findById(reminderId);
     if (!reminder) {
-      throw new Error("Reminder not found");
+      throw new CustomError(ERROR_MESSAGES.ITEM_NOT_FOUND, 404);
     }
     return reminder;
   },
 
   async createReminder(newReminder) {
-    const { reminder, notes, user_id } = newReminder;
+    const { reminder, notes, userId } = newReminder;
+
     const sanitizedReminder = {
       reminder: reminder?.trim(),
       notes: notes?.trim(),
-      user_id,
+      userId,
     };
-    const createdReminder = await ReminderModel.create(sanitizedReminder);
+
+    const createdReminder = ReminderModel.create(sanitizedReminder);
     return createdReminder;
   },
 
-  async updateReminder(id, newValues) {
-    const { reminder, notes, completed } = newValues;
+  async updateReminder(reminderId, newValues) {
+    // Verifică dacă newValues este valid
+    if (
+      !newValues ||
+      typeof newValues !== "object" ||
+      Object.keys(newValues).length === 0
+    ) {
+      throw new CustomError(ERROR_MESSAGES.INVALID_DATA, 400);
+    }
+
     const fields = Object.keys(newValues);
     const setClause = fields.map((key, index) => `${key} = $${index + 1}`);
     const values = Object.values(newValues);
-    values.push(id); // Add the id to the end of the values array for the WHERE clause
+    values.push(reminderId);
 
     const query = `
       UPDATE reminders
       SET ${setClause.join(", ")}
-      WHERE id = $${values[values.length - 1]}
-      RETURNING *;`;
+      WHERE id = $${values.length}
+      RETURNING *;
+    `;
+
     console.log(query);
     const updatedReminder = await ReminderModel.update(query, values);
     if (!updatedReminder) {
-      throw new Error("Reminder not found");
+      throw new CustomError(ERROR_MESSAGES.ITEM_NOT_FOUND, 404);
     }
     return updatedReminder;
   },
 
-  async deleteReminder(id) {
-    const authenticatedUser = 1;
-    const reminder = await ReminderModel.findById(id);
+  async deleteReminder(reminderId) {
+    const authenticatedUserId = 1;
+
+    const reminder = await ReminderModel.findById(reminderId);
 
     if (!reminder) {
-      throw new Error("Reminder not found");
+      throw new CustomError(ERROR_MESSAGES.ITEM_NOT_FOUND, 404);
     }
-    if (reminder.user_id !== authenticatedUser) {
-      throw new Error("You are not authorized to delete this reminder");
+
+    if (reminder.user_id !== authenticatedUserId) {
+      throw new CustomError(ERROR_MESSAGES.FORBIDDEN, 403);
     }
-    const rowCount = await ReminderModel.delete(id);
+
+    const rowCount = await ReminderModel.delete(reminderId);
+
     if (rowCount === 0) {
-      throw new Error("Failed to delete reminder");
+      throw new CustomError(ERROR_MESSAGES.INTERNAL_SERVER_ERROR, 500);
     }
+
     return { message: "Reminder deleted successfully" };
   },
 };
