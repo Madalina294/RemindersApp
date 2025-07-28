@@ -1,35 +1,34 @@
-import { DataBase } from "../config/dataBase.js";
+import db from "../config/db.js";
 
 export const ReminderModel = {
   async getAll() {
-    const result = await DataBase.query(
-      "SELECT * FROM reminders ORDER BY createdAt DESC"
+    const result = await db.query(
+      "SELECT * FROM reminders ORDER BY created_at DESC"
     );
     return result.rows;
   },
   async findById(id) {
-    const result = await DataBase.query(
-      "SELECT * FROM reminders WHERE id = $1",
-      [id]
-    );
+    const result = await db.query("SELECT * FROM reminders WHERE id = $1", [
+      id,
+    ]);
     return result.rows[0];
   },
-  async create({ reminder, notes, userId }) {
-    const result = await DataBase.query(
+
+  async create({ reminder, notes, user_id }) {
+    const result = await db.query(
       `
-            INSERT INTO reminders (reminder, notes, userId)
+            INSERT INTO reminders (reminder, notes, user_id)
             VALUES ($1, $2, $3) RETURNING *`,
-      [reminder, notes, userId]
+      [reminder, notes, user_id]
     );
     return result.rows[0];
   },
   async delete(id) {
-    const result = await DataBase.query("DELETE FROM reminders WHERE id = $1", [
-      id,
-    ]);
+    const result = await db.query("DELETE FROM reminders WHERE id = $1", [id]);
     return result.rowCount;
   },
-  async update() {
-    //Later
+  async update(query, values) {
+    const result = await db.query(query, values);
+    return result.rows[0];
   },
 };
